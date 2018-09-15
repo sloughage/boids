@@ -1,0 +1,6 @@
+- g intersecting no other g
+- buttons
+- cut
+- zoom
+- drag
+- export
