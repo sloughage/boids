@@ -61,6 +61,10 @@ export default class {
           if (!this.key.delete) this.queue.push("delete")
           this.key.delete = true
           this.key.sel = null
+          break
+        case 53:
+          this.queue.push("polygonate")
+          break
         case 37:
           this.queue.push("left")
           this.key.left = true
@@ -77,8 +81,6 @@ export default class {
           this.queue.push("down")
           this.key.down = true
           break
-        case 16:
-          this.key.shift = true
       }
     })
 
@@ -92,7 +94,6 @@ export default class {
         case 38: this.key.up = false; break
         case 39: this.key.right = false; break
         case 40: this.key.down = false; break
-        case 16: this.key.shift = false
       }
     })
 
@@ -105,8 +106,6 @@ export default class {
     })
   }
 }
-
-// window.addEventListener("onresize", onresize)
 
 function getDimensions () {
   const rect = canvas.getBoundingClientRect()

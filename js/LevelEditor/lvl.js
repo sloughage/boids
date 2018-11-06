@@ -10,39 +10,64 @@ function validate (lvl) {
     .map(e => lvl.e_list.some(f => !f.shared(e).length && f.intersect(e)))
 }
 
-// function polygonate (lvl) {
-//   let gs = [],
-//       ps = lvl.p_list.slice(),
-//       es = lvl.e_list.slice()
-//   while (ps.length) {
-//     let g = [],
-//         p = ps.shift()
-//     while (true) {
-//       g.push(p)
-//       let i = es.findIndex(e => e.includes(p)),
-//           e = es[i]
-//       es.splice(i, 1)
-//       p = e.other(p)
-//       i = lvl.p_list.findIndex(q => q.eq(p))
-//       if (i === -1) break
-//       else lvl.p_list.splice(i, 1)
-//     }
-//     gs.push(new G(...g))
-//   }
-//   let g_return = []
-//   while (gs.length) {
-//     let [g_1, g_out] = partition(gs, g => gs.some(h => h.contains(g)))
-//     let [g_2, g_in] = partition(g_1, g => g_1.some(h => h.contains(g)))
-//     for (let g of g_in) {
-//       for (let i = 0, len = g_out.length; i < len; i++) {
-//         if (g_out[i].contains(g)) g_out[i] = g_out[i].join(g)
-//       }
-//     }
-//     gs = g_2
-//     g_return = g_return.concat(g_out)
-//   }
-//   return g_return
-// }
+export function polygonate (lvl) {
+  if (!lvl.p_error.some(x=>x) && !lvl.e_error.some(x=>x)) {
+    let gs = makeGs(lvl.p_list, lvl.e_list)
+    gs = combineGs(gs)
+    console.log(gs)
+  }
+
+  // g[] -> g[]
+  function combineGs (gs) {
+    let rg = []
+    while (gs.length) {
+      let [g_1, g_out] = partition(gs, g => gs.some(h => h.contains(g)))
+      let [g_2, g_in] = partition(g_1, g => g_1.some(h => h.contains(g)))
+      for (let g of g_in) {
+        for (let i = 0, len = g_out.length; i < len; i++) {
+          if (g_out[i].contains(g)) g_out[i] = g_out[i].join(g)
+        }
+      }
+      gs = g_2
+      rg = rg.concat(g_out)
+    }
+    return rg
+  }
+
+  // p[], e[] -> g[]
+  function makeGs (p_s, e_s) {
+    let rarr = [],
+      ps = p_s.slice(),
+      es = e_s.slice()
+    while (ps.length) {
+      let robj = makeG(ps, es)
+      ps = robj.ps
+      es = robj.es
+      rarr.push(robj.g)
+    }
+    return rarr
+  }
+
+  // p[], e[] -> g
+  function makeG (p_s, e_s) {
+    let g = [],
+      ps = p_s.slice(),
+      es = e_s.slice(),
+      p = ps.shift()
+    while (p) {
+      g.push(p)
+      let i = es.findIndex(e => e.includes(p)),
+        e = es[i]
+      es.splice(i, 1)
+      p = e.other(p)
+      i = ps.findIndex(q => q.eq(p))
+      if (i === -1) break
+      ps.splice(i, 1)
+    }
+    g = new G(...g)
+    return {ps, es, g}
+  }
+}
 
 export function click (lvl, mouse_p, key) {
   let p = lvl.p_list.find(q => q.d(mouse_p) <= 4)

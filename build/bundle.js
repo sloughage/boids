@@ -176,7 +176,7 @@ class P {
 /* harmony export (immutable) */ __webpack_exports__["b"] = drawBox;
 /* harmony export (immutable) */ __webpack_exports__["f"] = drawText;
 /* unused harmony export write */
-/* unused harmony export partition */
+/* harmony export (immutable) */ __webpack_exports__["g"] = partition;
 /* unused harmony export inBox */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__p_P__ = __webpack_require__(0);
 
@@ -358,13 +358,14 @@ function update (state) {
   while (state.queue.length) {
     switch (state.queue.shift()) {
       case "mousedown": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["a" /* click */])(state.lvl, state.mouse.p, state.key.sel); break
-      case "mouseup": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["e" /* unclick */])(state.lvl); break
-      case "unlink": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["f" /* unlink */])(state.lvl); break
+      case "mouseup": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["f" /* unclick */])(state.lvl); break
+      case "unlink": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["g" /* unlink */])(state.lvl); break
       case "delete": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["b" /* del */])(state.lvl); break
-      case "left": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["d" /* step */])(state.lvl, "left"); break
-      case "up": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["d" /* step */])(state.lvl, "up"); break
-      case "right": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["d" /* step */])(state.lvl, "right"); break
-      case "down": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["d" /* step */])(state.lvl, "down")
+      case "left": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["e" /* step */])(state.lvl, "left"); break
+      case "up": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["e" /* step */])(state.lvl, "up"); break
+      case "right": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["e" /* step */])(state.lvl, "right"); break
+      case "down": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["e" /* step */])(state.lvl, "down"); break
+      case "polygonate": Object(__WEBPACK_IMPORTED_MODULE_1__lvl__["d" /* polygonate */])(state.lvl)
     }
   }
 }
@@ -448,6 +449,10 @@ window.requestAnimationFrame(main)
           if (!this.key.delete) this.queue.push("delete")
           this.key.delete = true
           this.key.sel = null
+          break
+        case 53:
+          this.queue.push("polygonate")
+          break
         case 37:
           this.queue.push("left")
           this.key.left = true
@@ -464,8 +469,6 @@ window.requestAnimationFrame(main)
           this.queue.push("down")
           this.key.down = true
           break
-        case 16:
-          this.key.shift = true
       }
     })
 
@@ -479,7 +482,6 @@ window.requestAnimationFrame(main)
         case 38: this.key.up = false; break
         case 39: this.key.right = false; break
         case 40: this.key.down = false; break
-        case 16: this.key.shift = false
       }
     })
 
@@ -492,8 +494,6 @@ window.requestAnimationFrame(main)
     })
   }
 });
-
-// window.addEventListener("onresize", onresize)
 
 function getDimensions () {
   const rect = __WEBPACK_IMPORTED_MODULE_1__util__["a" /* canvas */].getBoundingClientRect()
@@ -532,12 +532,13 @@ function round (n, i) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["d"] = polygonate;
 /* harmony export (immutable) */ __webpack_exports__["a"] = click;
-/* harmony export (immutable) */ __webpack_exports__["f"] = unlink;
+/* harmony export (immutable) */ __webpack_exports__["g"] = unlink;
 /* harmony export (immutable) */ __webpack_exports__["b"] = del;
-/* harmony export (immutable) */ __webpack_exports__["d"] = step;
+/* harmony export (immutable) */ __webpack_exports__["e"] = step;
 /* harmony export (immutable) */ __webpack_exports__["c"] = move;
-/* harmony export (immutable) */ __webpack_exports__["e"] = unclick;
+/* harmony export (immutable) */ __webpack_exports__["f"] = unclick;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__p_P__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__p_E__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__p_G__ = __webpack_require__(8);
@@ -554,39 +555,64 @@ function validate (lvl) {
     .map(e => lvl.e_list.some(f => !f.shared(e).length && f.intersect(e)))
 }
 
-// function polygonate (lvl) {
-//   let gs = [],
-//       ps = lvl.p_list.slice(),
-//       es = lvl.e_list.slice()
-//   while (ps.length) {
-//     let g = [],
-//         p = ps.shift()
-//     while (true) {
-//       g.push(p)
-//       let i = es.findIndex(e => e.includes(p)),
-//           e = es[i]
-//       es.splice(i, 1)
-//       p = e.other(p)
-//       i = lvl.p_list.findIndex(q => q.eq(p))
-//       if (i === -1) break
-//       else lvl.p_list.splice(i, 1)
-//     }
-//     gs.push(new G(...g))
-//   }
-//   let g_return = []
-//   while (gs.length) {
-//     let [g_1, g_out] = partition(gs, g => gs.some(h => h.contains(g)))
-//     let [g_2, g_in] = partition(g_1, g => g_1.some(h => h.contains(g)))
-//     for (let g of g_in) {
-//       for (let i = 0, len = g_out.length; i < len; i++) {
-//         if (g_out[i].contains(g)) g_out[i] = g_out[i].join(g)
-//       }
-//     }
-//     gs = g_2
-//     g_return = g_return.concat(g_out)
-//   }
-//   return g_return
-// }
+function polygonate (lvl) {
+  if (!lvl.p_error.some(x=>x) && !lvl.e_error.some(x=>x)) {
+    let gs = makeGs(lvl.p_list, lvl.e_list)
+    gs = combineGs(gs)
+    console.log(gs)
+  }
+
+  // g[] -> g[]
+  function combineGs (gs) {
+    let rg = []
+    while (gs.length) {
+      let [g_1, g_out] = Object(__WEBPACK_IMPORTED_MODULE_3__util__["g" /* partition */])(gs, g => gs.some(h => h.contains(g)))
+      let [g_2, g_in] = Object(__WEBPACK_IMPORTED_MODULE_3__util__["g" /* partition */])(g_1, g => g_1.some(h => h.contains(g)))
+      for (let g of g_in) {
+        for (let i = 0, len = g_out.length; i < len; i++) {
+          if (g_out[i].contains(g)) g_out[i] = g_out[i].join(g)
+        }
+      }
+      gs = g_2
+      rg = rg.concat(g_out)
+    }
+    return rg
+  }
+
+  // p[], e[] -> g[]
+  function makeGs (p_s, e_s) {
+    let rarr = [],
+      ps = p_s.slice(),
+      es = e_s.slice()
+    while (ps.length) {
+      let robj = makeG(ps, es)
+      ps = robj.ps
+      es = robj.es
+      rarr.push(robj.g)
+    }
+    return rarr
+  }
+
+  // p[], e[] -> g
+  function makeG (p_s, e_s) {
+    let g = [],
+      ps = p_s.slice(),
+      es = e_s.slice(),
+      p = ps.shift()
+    while (p) {
+      g.push(p)
+      let i = es.findIndex(e => e.includes(p)),
+        e = es[i]
+      es.splice(i, 1)
+      p = e.other(p)
+      i = ps.findIndex(q => q.eq(p))
+      if (i === -1) break
+      ps.splice(i, 1)
+    }
+    g = new __WEBPACK_IMPORTED_MODULE_2__p_G__["a" /* default */](...g)
+    return {ps, es, g}
+  }
+}
 
 function click (lvl, mouse_p, key) {
   let p = lvl.p_list.find(q => q.d(mouse_p) <= 4)
@@ -794,7 +820,7 @@ class G {
   }
 
 }
-/* unused harmony export default */
+/* harmony export (immutable) */ __webpack_exports__["a"] = G;
 
 
 

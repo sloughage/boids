@@ -1,5 +1,5 @@
 import State from "./state"
-import { move, click, add, unlink, del, step, unclick } from "./lvl"
+import { move, click, add, unlink, del, polygonate, step, unclick } from "./lvl"
 import draw from "./draw"
 
 let state = new State()
@@ -15,7 +15,8 @@ function update (state) {
       case "left": step(state.lvl, "left"); break
       case "up": step(state.lvl, "up"); break
       case "right": step(state.lvl, "right"); break
-      case "down": step(state.lvl, "down")
+      case "down": step(state.lvl, "down"); break
+      case "polygonate": polygonate(state.lvl)
     }
   }
 }
